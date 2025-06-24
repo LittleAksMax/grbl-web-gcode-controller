@@ -1,10 +1,106 @@
 /////////////////////////////
+///    GENERAL UTILITY    ///
+/////////////////////////////
+
+/**
+ * This function is supposed to make adding click events to specific
+ * buttons more concise.
+ * NOTE: this is a ChatGPT'd JavaDoc
+ * @template Args extends any[]
+ * @param {string} id
+ * @param {(e: MouseEvent, ...args: Args) => Promise<void>} f
+ * @param {...Args} args
+ */
+const addClick = (id, f, ...args) => {
+  document
+    .getElementById(id)
+    .addEventListener('click', async (e) => f(e, ...args));
+};
+
+/**
+ * Send a single command to the machine through the serial port.
+ * @param {SerialPort} port
+ * @param {string} command
+ */
+const ping = async (port, command) => {
+  // obtain writer for command
+  const textEncoder = new TextEncoderStream();
+  const writableDone = textEncoder.readable.pipeTo(port.writable);
+  const writer = textEncoder.writable.getWriter();
+
+  // obtain reader
+  const textDecoder = new TextDecoderStream();
+  const readableStreamClosed = port.readable.pipeTo(textDecoder.writable);
+  const reader = textDecoder.readable.getReader();
+
+  // settings message
+  await writer.write(`${command}\n`); // NOTE: I don't know if \n is necessary
+  await writer.close();
+  await writableDone;
+
+  let stopped = false;
+  while (port.readable && !stopped) {
+    try {
+      while (!stopped) {
+        const { value, done } = await reader.read();
+        if (done) {
+          writeToConsole('\n');
+          stopped = true;
+          continue;
+        }
+
+        writeToConsole(value);
+
+        // we separate ok and error for clarity (despite equivalent handling)
+        // TODO: error message detection is not be accurate at all
+        // https://github.com/grbl/grbl/wiki//Interfacing-with-Grbl#grbl-response-meanings
+        if (value.trim().endsWith('ok')) {
+          writeToConsole('\n');
+          stopped = true;
+          continue;
+        } else if (value.trim().endsWith('error')) {
+          writeToConsole('\n');
+          stopped = true;
+          continue;
+        }
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      reader.cancel();
+
+      // we just blindly catch this error because it doesn't
+      // actually do anything (it's an undefined error????)
+      await readableStreamClosed.catch((_) => {});
+    }
+  }
+
+  reader.releaseLock();
+  writer.releaseLock();
+};
+
+const getOpenPort = async () => {
+  const openPorts = document.getElementsByClassName('open');
+  if (openPorts.length === 0) {
+    return null;
+  }
+  const firstOpenPortUsbProductId = parseInt(openPorts[0].innerText);
+
+  const ports = await navigator.serial.getPorts();
+  const port = ports.filter(
+    (port) => port.getInfo().usbProductId === firstOpenPortUsbProductId
+  )[0]; // NOTE: no sanity check here
+
+  return port;
+};
+
+/////////////////////////////
 /// CONNECTION MANAGEMENT ///
 /////////////////////////////
 
-const BAUD_RATE = 115200; // hard-coded for grbl
-const USB_PRODUCT_ID = 29987; // specific for machine
-const USB_VENDOR_ID = 6790; // specific for machine
+const BAUD_RATE = 115200; // hard-coded for machine
+const USB_PRODUCT_ID = 29987; // hard-coded for machine
+const USB_VENDOR_ID = 6790; // hard-coded for machine
 
 /**
  * Event for when new USB is plugged in.
@@ -38,7 +134,7 @@ document.addEventListener('DOMContentLoaded', async () => {
  * This is used to wait for user activation if no ports are accessible.
  * https://developer.mozilla.org/en-US/docs/Web/API/Web_Serial_API#specifications
  */
-document.getElementById('pair').addEventListener('click', async () => {
+addClick('pair', async (_) => {
   // filtering: https://wicg.github.io/serial/#serialportfilter-dictionary
 
   try {
@@ -59,54 +155,7 @@ document.getElementById('pair').addEventListener('click', async () => {
 const openPort = async (port) => {
   await port.open({ baudRate: BAUD_RATE });
 
-  // set text encoder
-  const textEncoder = new TextEncoderStream();
-  const writableDone = textEncoder.readable.pipeTo(port.writable);
-  const writer = textEncoder.writable.getWriter();
-
-  const textDecoder = new TextDecoderStream();
-  const readableStreamClosed = port.readable.pipeTo(textDecoder.writable);
-  const reader = textDecoder.readable.getReader();
-
-  // settings message
-  await writer.write('$$\n');
-  await writer.close();
-  await writableDone;
-
-  let stopped = false;
-  while (port.readable && !stopped) {
-    try {
-      while (!stopped) {
-        const { value, done } = await reader.read();
-        console.debug({ value, done });
-        if (done) {
-          writeToConsole('\n');
-          stopped = true;
-          continue;
-        }
-
-        writeToConsole(value);
-
-        // we are done if we read 'ok' for the $$ message
-        if (value.trim().endsWith('ok')) {
-          writeToConsole('\n');
-          stopped = true;
-          continue;
-        }
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      reader.cancel();
-
-      // we just blindly catch this error because it doesn't
-      // actually do anything (it's an undefined error????)
-      await readableStreamClosed.catch((_) => {});
-    }
-  }
-
-  reader.releaseLock();
-  writer.releaseLock();
+  await ping(port, '$$');
 };
 
 /**
@@ -240,17 +289,45 @@ const READ_INTERVAL = 2000; // 2 seconds
 /**
  * Clear the console.
  */
-document.getElementById('clear').addEventListener('click', () => {
-  document.getElementById('console').innerText = '';
+addClick('clear', () => {
+  document.getElementById('console').value = '';
 });
 
 const directions = ['xplus', 'xminus', 'yplus', 'yminus', 'zplus', 'zminus'];
 
 directions.forEach((direction) => {
-  document.getElementById(direction).addEventListener('click', async () => {
+  addClick(direction, async (_) => {
     // TODO: implement actual signals
+    const stepsize = getStepSize();
     console.debug('Clicked ' + direction);
   });
+});
+
+addClick('zorigin', async (_) => {
+  console.debug('Clicked zorigin');
+});
+
+addClick('xyorigin', async (_) => {
+  console.debug('Clicked xyorigin');
+});
+
+addClick('reset', async (_) => {
+  console.debug('Clicked reset');
+});
+
+addClick('home', async (_) => {
+  const port = await getOpenPort();
+
+  // no open port
+  if (!port) {
+    return;
+  }
+
+  await ping(port, '$H');
+});
+
+addClick('ztouchplate', async (_) => {
+  console.debug('Clicked ztouchplate');
 });
 
 /////////////////////////////
@@ -264,4 +341,14 @@ directions.forEach((direction) => {
 const writeToConsole = (log) => {
   const console = document.getElementById('console');
   console.value += log;
+};
+
+/**
+ *
+ * @returns {number} The number in the #stepsize dropdown.
+ */
+const getStepSize = () => {
+  const stepsizes = document.getElementById('stepsize');
+  const value = parseFloat(stepsizes.options[stepsizes.selectedIndex].value);
+  return value;
 };

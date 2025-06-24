@@ -16,10 +16,14 @@
       </div>
       <div class="jog-panel">
         <div class="zeroing">
-          <button class="zerobtn">Start Homing Sequence</button>
-          <button class="zerobtn">Z Touch Plate</button>
+          <button id="home" class="zerobtn panel-btn">
+            Start Homing Sequence
+          </button>
+          <button id="ztouchplate" class="zerobtn panel-btn">
+            Z Touch Plate
+          </button>
         </div>
-        <div class="xy">
+        <div class="control">
           <button id="yplus" class="panel-btn">+Y</button>
           <button id="yminus" class="panel-btn">-Y</button>
           <button id="xplus" class="panel-btn">+X</button>
@@ -35,10 +39,11 @@
               <option value="20">20</option>
             </select>
           </div>
-        </div>
-        <div class="z">
+          <button id="xyorigin" class="panel-btn">XY Origin Here</button>
           <button id="zplus" class="panel-btn">+Z</button>
           <button id="zminus" class="panel-btn">-Z</button>
+          <button id="zorigin" class="panel-btn">Z Origin Here</button>
+          <button id="reset" class="panel-btn">Reset Default Origin</button>
         </div>
         <div class="drive-to"></div>
 

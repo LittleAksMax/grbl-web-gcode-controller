@@ -47,13 +47,20 @@
 }
 
 .jog-panel {
-  margin: 0 40pt 0 40pt;
+  margin: 10pt 40pt 10pt 40pt;
 }
 
-.xy {
+.panel-btn {
+  padding: 10pt;
+}
+
+.control {
   display: grid;
-  grid-template-rows: 3;
-  grid-template-columns: 3;
+  grid-template-columns: repeat(
+    auto-fill,
+    minmax(100px, 1fr)
+  ); /* Equal column sizes */
+  grid-template-rows: 100px; /* Equal row height */
 }
 
 #xplus {
@@ -76,6 +83,26 @@
   grid-row: 3;
 }
 
+#zplus {
+  grid-row: 1;
+  grid-column: 4;
+}
+
+#zminus {
+  grid-row: 3;
+  grid-column: 4;
+}
+
+#zorigin {
+  grid-row: 2;
+  grid-column: 4;
+}
+
+#reset {
+  grid-column: 3;
+  grid-row: 3;
+}
+
 #stepsize-container {
   display: flex;
   align-items: center;
@@ -88,11 +115,13 @@
   padding: 2pt;
 }
 
-.panel-btn {
-  padding: 10pt;
+#xyorigin {
+  grid-column: 1;
+  grid-row: 3;
 }
 
-.z {
+.control .panel-btn {
+  margin: 5pt;
 }
 
 .console {
