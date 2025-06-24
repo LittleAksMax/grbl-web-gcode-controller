@@ -6,6 +6,9 @@ const BAUD_RATE = 115200; // hard-coded for grbl
 const USB_PRODUCT_ID = 29987; // specific for machine
 const USB_VENDOR_ID = 6790; // specific for machine
 
+/**
+ * Event for when new USB is plugged in.
+ */
 navigator.serial.addEventListener('connect', async (e) => {
   // Connect to `e.target` or add it to a list of available ports.
   console.debug('Connect');
@@ -27,7 +30,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   const ports = await navigator.serial.getPorts();
 
   ports.forEach((port) => {
-    console.debug(port);
     addPairing(port); // update pairings list
   });
 });
@@ -43,7 +45,6 @@ document.getElementById('pair').addEventListener('click', async () => {
     const port = await navigator.serial.requestPort({
       filters: [{ usbProductId: USB_PRODUCT_ID, usbVendorId: USB_VENDOR_ID }],
     });
-    console.debug(port.getInfo());
     addPairing(port); // update pairings list
   } catch (e) {
     console.debug('Failed to request port');
@@ -57,6 +58,55 @@ document.getElementById('pair').addEventListener('click', async () => {
  */
 const openPort = async (port) => {
   await port.open({ baudRate: BAUD_RATE });
+
+  // set text encoder
+  const textEncoder = new TextEncoderStream();
+  const writableDone = textEncoder.readable.pipeTo(port.writable);
+  const writer = textEncoder.writable.getWriter();
+
+  const textDecoder = new TextDecoderStream();
+  const readableStreamClosed = port.readable.pipeTo(textDecoder.writable);
+  const reader = textDecoder.readable.getReader();
+
+  // settings message
+  await writer.write('$$\n');
+  await writer.close();
+  await writableDone;
+
+  let stopped = false;
+  while (port.readable && !stopped) {
+    try {
+      while (!stopped) {
+        const { value, done } = await reader.read();
+        console.debug({ value, done });
+        if (done) {
+          writeToConsole('\n');
+          stopped = true;
+          continue;
+        }
+
+        writeToConsole(value);
+
+        // we are done if we read 'ok' for the $$ message
+        if (value.trim().endsWith('ok')) {
+          writeToConsole('\n');
+          stopped = true;
+          continue;
+        }
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      reader.cancel();
+
+      // we just blindly catch this error because it doesn't
+      // actually do anything (it's an undefined error????)
+      await readableStreamClosed.catch((_) => {});
+    }
+  }
+
+  reader.releaseLock();
+  writer.releaseLock();
 };
 
 /**
@@ -101,8 +151,13 @@ const pairingClickEvent = async (e) => {
     }
   } catch (err) {
     console.error(err);
-    // toggle class on failure
-    e.target.classList.toggle('open');
+
+    // ensure CSS class matches the real state of port
+    if (isOpen(clickedPort)) {
+      e.target.classList.add('open');
+    } else {
+      e.target.classList.remove('open');
+    }
   }
 };
 
@@ -180,33 +235,7 @@ const isOpen = (port) => port.readable && port.writable;
 ///     COMMUNICATION     ///
 /////////////////////////////
 
-const READ_INTERVAL = 1000; // 1 second
-
-/**
- * Read port and write contents to console for a fixed
- * interval.
- * https://wicg.github.io/serial/#readable-attribute
- * @param {SerialPort} port
- */
-const read = async (port) => {
-  const reader = port.readable.getReader();
-  const timer = setTimeout(() => {
-    reader.cancel();
-  }, READ_INTERVAL);
-
-  try {
-    const { value, done } = await reader.read();
-    if (value) {
-      writeToConsole();
-    } else {
-      writeToConsole('No output');
-    }
-  } catch (err) {
-    console.error(err);
-  } finally {
-    clearTimeout(timer);
-  }
-};
+const READ_INTERVAL = 2000; // 2 seconds
 
 /**
  * Clear the console.
@@ -228,6 +257,11 @@ directions.forEach((direction) => {
 /// COMMUNICATION UTILITY ///
 /////////////////////////////
 
+/**
+ *
+ * @param {String} log
+ */
 const writeToConsole = (log) => {
-  document.getElementById('console').innerText += log + '\r\n';
+  const console = document.getElementById('console');
+  console.value += log;
 };
