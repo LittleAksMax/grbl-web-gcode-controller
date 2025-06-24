@@ -284,6 +284,11 @@ const isOpen = (port) => port.readable && port.writable;
 ///     COMMUNICATION     ///
 /////////////////////////////
 
+/**
+ * G-Code commands list
+ * https://cncphilosophy.com/grbl-g-code-commands-list/
+ */
+
 const READ_INTERVAL = 2000; // 2 seconds
 
 /**
@@ -297,22 +302,57 @@ const directions = ['xplus', 'xminus', 'yplus', 'yminus', 'zplus', 'zminus'];
 
 directions.forEach((direction) => {
   addClick(direction, async (_) => {
-    // TODO: implement actual signals
-    const stepsize = getStepSize();
-    console.debug('Clicked ' + direction);
+    const port = await getOpenPort();
+
+    // no port open
+    if (!port) {
+      return;
+    }
+
+    // infer appropriate axis
+    // NOTE: no sanity check for validity of axis
+    const axis = direction.charAt(0).toUpperCase();
+    // get appropriate stepsize
+    const stepsize = getStepSize() * (direction.endsWith('minus') ? -1 : 1);
+
+    // send message
+    // G91 - relative mode; G90 - absolute mode
+    await ping(port, `G91\nG0 ${axis}${stepsize}\nG90\n`);
   });
 });
 
 addClick('zorigin', async (_) => {
-  console.debug('Clicked zorigin');
+  const port = await getOpenPort();
+
+  // no port open
+  if (!port) {
+    return;
+  }
+
+  await ping(port, 'G92 Z0\n');
 });
 
 addClick('xyorigin', async (_) => {
-  console.debug('Clicked xyorigin');
+  const port = await getOpenPort();
+
+  // no port open
+  if (!port) {
+    return;
+  }
+
+  await ping(port, 'G92 X0 Y0\n');
 });
 
 addClick('reset', async (_) => {
-  console.debug('Clicked reset');
+  const port = await getOpenPort();
+
+  // no port open
+  if (!port) {
+    return;
+  }
+
+  // G92.1 - clears offsets
+  await ping(port, 'G92.1\n');
 });
 
 addClick('home', async (_) => {
@@ -327,6 +367,7 @@ addClick('home', async (_) => {
 });
 
 addClick('ztouchplate', async (_) => {
+  // TODO: nothing to implement here
   console.debug('Clicked ztouchplate');
 });
 
