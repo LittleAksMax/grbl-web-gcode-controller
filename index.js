@@ -373,6 +373,10 @@ addClick('ztouchplate', async (_) => {
 
 addClick('drive', async (_) => {
   const port = await getOpenPort();
+  if (!port) {
+    return;
+  }
+
   const [x, y] = getAbsoluteCoords();
 
   await ping(port, `G90\nG0 X${x} Y${y}`);
@@ -411,3 +415,50 @@ const getAbsoluteCoords = () => {
   const y = parseInt(document.getElementById('yabs').value);
   return [x, y];
 };
+
+/////////////////////////////
+///   GCODE FILE UPLOAD   ///
+/////////////////////////////
+
+document.getElementById('code').addEventListener('change', (e) => {
+  // we want to read the (first) file and dump its content
+  const reader = new FileReader();
+
+  // write the contents of the file to the code preview on load
+  reader.addEventListener('load', (e) => {
+    document.getElementById('gcode-preview').value = e.target.result;
+  });
+
+  // it's safe to select .files[0] since the multiple attribute is not
+  // on the input element this function is attached to
+  reader.readAsText(e.target.files[0]);
+});
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+addClick('exec', async () => {
+  const port = await getOpenPort();
+  if (!port) {
+    return;
+  }
+
+  // NOTE: I assumed I don't have to validate the instructions
+  const instructions = document
+    .getElementById('gcode-preview')
+    .value.split('\n')
+    .filter((instruction) => instruction.trim() !== '');
+
+  // if the preview box is empty (there are no instructions to execute)
+  // we should not proceed
+  if (instructions.length === 0) {
+    return;
+  }
+
+  // execute each instruction in sequence
+  // NOTE: this is very inefficient due to how instructions are transmitted
+  for (const instruction of instructions) {
+    await ping(port, instruction + '\n');
+  }
+});

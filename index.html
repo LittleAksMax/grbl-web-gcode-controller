@@ -59,7 +59,15 @@
           <button id="clear" class="clear">Clear Console</button>
         </div>
       </div>
-      <div class="cut-panel"></div>
+      <div class="code-panel">
+        <label for="code">Upload G-Code File</label>
+        <input id="code" name="code" type="file" />
+        <div id="gcode-preview-container" class="console-container"></div>
+          <textarea id="gcode-preview" class="console" disabled></textarea>
+        </div>
+
+        <button id="exec" class="panel-btn">Execute</button>
+      </div>
     </div>
   </body>
 </html>

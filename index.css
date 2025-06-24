@@ -50,11 +50,8 @@
 
 .control {
   display: grid;
-  grid-template-columns: repeat(
-    auto-fill,
-    minmax(100px, 1fr)
-  ); /* Equal column sizes */
-  grid-template-rows: 100px; /* Equal row height */
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  grid-template-rows: 100px;
 }
 
 #xplus {
@@ -125,4 +122,10 @@
 .console {
   width: 100%;
   height: 20vh;
+  font-family: monospace;
+}
+
+.code-panel {
+  display: flex;
+  flex-direction: column;
 }
