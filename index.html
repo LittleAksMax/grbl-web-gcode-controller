@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="index.css" />
+    <script defer type="text/javascript" src="index.js"></script>
+    <title>Web Serial API</title>
+  </head>
+  <body>
+    <div id="root" class="root">
+      <div id="connections" class="connections">
+        <h3>Paired</h3>
+        <ul class="pairings" id="pairings"></ul>
+        <span class="pair" id="pair">New pairing</span>
+      </div>
+      <div class="jog-panel">
+        <div class="zeroing">
+          <button class="zerobtn">Start Homing Sequence</button>
+          <button class="zerobtn">Z Touch Plate</button>
+        </div>
+        <div class="xy">
+          <button id="yplus" class="panel-btn">+Y</button>
+          <button id="yminus" class="panel-btn">-Y</button>
+          <button id="xplus" class="panel-btn">+X</button>
+          <button id="xminus" class="panel-btn">-X</button>
+          <div id="stepsize-container">
+            <select id="stepsize" class="stepsize">
+              <option value="0.05">0.05</option>
+              <option value="0.1">0.1</option>
+              <option value="1">1</option>
+              <option value="5">5</option>
+              <option value="10">10</option>
+              <option value="15">15</option>
+              <option value="20">20</option>
+            </select>
+          </div>
+        </div>
+        <div class="z">
+          <button id="zplus" class="panel-btn">+Z</button>
+          <button id="zminus" class="panel-btn">-Z</button>
+        </div>
+        <div class="drive-to"></div>
+
+        <div id="console-container" class="console-container">
+          <textarea id="console" class="console" disabled></textarea>
+          <br />
+          <button id="clear" class="clear">Clear Console</button>
+        </div>
+      </div>
+      <div class="cut-panel"></div>
+    </div>
+  </body>
+</html>

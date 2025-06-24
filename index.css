@@ -1,0 +1,101 @@
+.root {
+  margin: 0 10% 0 10%;
+  border: solid lightgrey 1pt;
+}
+
+.connections {
+  border: solid black 2pt;
+  padding: 0 10% 0 10%;
+}
+
+.paired-list-item {
+  text-decoration: underline;
+}
+
+.paired-list-item:hover {
+  cursor: pointer;
+}
+
+.paired-list-item:hover:not(.open) {
+  color: lightgreen;
+}
+
+.open {
+  color: lightgreen;
+}
+
+.open:hover {
+  color: red;
+  cursor: pointer;
+}
+
+.pair {
+  font-style: italic;
+  font-family: 'Courier New', Courier, monospace;
+  text-decoration: underline;
+}
+
+.pair:hover {
+  color: blueviolet;
+  cursor: pointer;
+}
+
+.zeroing {
+}
+
+.zero-btn {
+}
+
+.jog-panel {
+  margin: 0 40pt 0 40pt;
+}
+
+.xy {
+  display: grid;
+  grid-template-rows: 3;
+  grid-template-columns: 3;
+}
+
+#xplus {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+#yplus {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+#xminus {
+  grid-column: 3;
+  grid-row: 2;
+}
+
+#yminus {
+  grid-column: 2;
+  grid-row: 3;
+}
+
+#stepsize-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  grid-column: 2;
+  grid-row: 2;
+}
+
+#stepsize {
+  padding: 2pt;
+}
+
+.panel-btn {
+  padding: 10pt;
+}
+
+.z {
+}
+
+.console {
+  width: 100%;
+  height: 20vh;
+}
