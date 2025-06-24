@@ -40,12 +40,6 @@
   cursor: pointer;
 }
 
-.zeroing {
-}
-
-.zero-btn {
-}
-
 .jog-panel {
   margin: 10pt 40pt 10pt 40pt;
 }
@@ -122,6 +116,10 @@
 
 .control .panel-btn {
   margin: 5pt;
+}
+
+.driveto {
+  margin: 10pt 0 10pt 0;
 }
 
 .console {

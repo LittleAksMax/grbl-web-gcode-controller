@@ -45,7 +45,13 @@
           <button id="zorigin" class="panel-btn">Z Origin Here</button>
           <button id="reset" class="panel-btn">Reset Default Origin</button>
         </div>
-        <div class="drive-to"></div>
+        <div class="driveto">
+          <label for="xabs">X:</label>
+          <input id="xabs" name="xabs" type="number" step="1" value="0" />
+          <label for="yabs">Y:</label>
+          <input id="yabs" name="yabs" type="number" step="1" value="0" />
+          <button id="drive" class="panel-btn">Drive To</button>
+        </div>
 
         <div id="console-container" class="console-container">
           <textarea id="console" class="console" disabled></textarea>

@@ -352,7 +352,7 @@ addClick('reset', async (_) => {
   }
 
   // G92.1 - clears offsets
-  await ping(port, 'G92.1\n');
+  await ping(port, 'G92.1\nG10 L2 P1 X0 Y0 Z0\n');
 });
 
 addClick('home', async (_) => {
@@ -369,6 +369,13 @@ addClick('home', async (_) => {
 addClick('ztouchplate', async (_) => {
   // TODO: nothing to implement here
   console.debug('Clicked ztouchplate');
+});
+
+addClick('drive', async (_) => {
+  const port = await getOpenPort();
+  const [x, y] = getAbsoluteCoords();
+
+  await ping(port, `G90\nG0 X${x} Y${y}`);
 });
 
 /////////////////////////////
@@ -392,4 +399,15 @@ const getStepSize = () => {
   const stepsizes = document.getElementById('stepsize');
   const value = parseFloat(stepsizes.options[stepsizes.selectedIndex].value);
   return value;
+};
+
+/**
+ *
+ * @returns {number[]} The values in the 2 input boxes for
+ *                     driving to absolute positions.
+ */
+const getAbsoluteCoords = () => {
+  const x = parseInt(document.getElementById('xabs').value);
+  const y = parseInt(document.getElementById('yabs').value);
+  return [x, y];
 };
